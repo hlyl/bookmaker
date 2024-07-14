@@ -1,3 +1,9 @@
+import warnings
+
+# Suppress specific warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="ebooklib.epub")
+warnings.filterwarnings("ignore", category=FutureWarning, module="ebooklib.epub")
+
 import os
 import ebooklib
 from ebooklib import epub
@@ -7,12 +13,6 @@ from typing import Dict, List
 from openai import OpenAI
 from dotenv import load_dotenv
 from docx import Document
-from docx.enum.text import WD_BREAK
-import warnings
-
-# Suppress specific warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="ebooklib.epub")
-warnings.filterwarnings("ignore", category=FutureWarning, module="ebooklib.epub")
 
 # Load environment variables from .env file
 load_dotenv()
@@ -28,18 +28,16 @@ def summarize_text_with_chatgpt(text):
             {
                 "role": "system",
                 "content": (
-                    "You are an assistant with expertise in prompt engineering, tasked with creating a concise and "
-                    "engaging summary of the provided text. The summary should begin with the key takeaway(s), "
-                    "followed by a section labeled 'Recap,' and then provide a detailed summary that is approximately "
-                    "two-thirds the length of the original text. The tone should be interesting, intelligent, and reflect the "
-                    "writing style of an Enterprise Architect at a global pharma company transitioning from an old IT "
-                    "setup to a modern agile and cloud-based development methodology."
+                    "You are an assistant, tasked with creating a concise and "
+                    "engaging summary of the provided text. The summary should begin with the key takeaway(s), followed by a section labeled 'Recap,' "
+                    "and then provide a detailed summary that is approximately two-thirds the length of the original text. "
+                    "The tone should be interesting, intelligent, and reflect the writing style of an Enterprise Architect "
                 ),
             },
             {"role": "user", "content": text},
         ],
     )
-    return chat_completion.choices[0].message.content
+    return chat_completion.choices[0].message.content.strip()
 
 def read_epub_book(file_name: str) -> epub.EpubBook:
     """Reads an EPUB book from the given file name."""
@@ -71,7 +69,7 @@ def count_words(text: str) -> int:
 
 if __name__ == "__main__":
     # File path
-#    file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ThinkinginSystems.epub")
+    #file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ThinkinginSystems.epub")
     file_name = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ThinkinginSystems.epub")
 
     # Set test_mode to True to process only the first two chapters
@@ -88,18 +86,23 @@ if __name__ == "__main__":
         # Add chapter name
         document.add_heading(chapter_name, level=1)
 
-        # Add summarized text
-        document.add_paragraph("Key Takeaway(s):")
-        document.add_paragraph(summarized_text.split('\n')[0])
+        # Split the summarized text by sections to avoid repeated headings
+        sections = summarized_text.split('\n')
+        added_sections = set()
+        for section in sections:
+            if section.startswith("Key Takeaway(s):") and "Key Takeaway(s):" not in added_sections:
+                document.add_paragraph(section)
+                added_sections.add("Key Takeaway(s):")
+            elif section.startswith("Recap:") and "Recap:" not in added_sections:
+                document.add_paragraph(section)
+                added_sections.add("Recap:")
+            else:
+                document.add_paragraph(section)
         
-        document.add_paragraph("Recap:")
-        document.add_paragraph('\n'.join(summarized_text.split('\n')[1:]))
-
         # Add a section break (next page)
         document.add_page_break()
 
-    # Save the document
+    # Save the document one folder up from the current directory
     output_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Summarized_Chapters.docx")
-    #output_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Summarized_Chapters.docx")
     document.save(output_file)
     print(f"Summarized chapters saved to {output_file}")
