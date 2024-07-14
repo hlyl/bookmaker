@@ -96,7 +96,7 @@ def test_extract_chapters_to_text(mocker, mock_epub_book, mock_epub_chapter, moc
     mock_epub_book.get_item_with_href.return_value = mock_epub_chapter
 
     file_name = "test.epub"
-    result = extract_chapters_to_text(mock_epub_book, test_mode=True)
+    result = extract_chapters_to_text(file_name, test_mode=True)
 
     mock_read_epub.assert_called_once_with(file_name)
     mock_extract_chapters_from_ncx.assert_called_once_with(mock_epub_book)
