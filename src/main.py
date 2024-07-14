@@ -29,10 +29,13 @@ def summarize_text_with_chatgpt(text):
             {
                 "role": "system",
                 "content": (
-                    "You are an assistant, tasked with creating a concise and "
-                    "engaging summary of the provided text. The summary should begin with the key takeaway(s), followed by a section labeled 'Recap,' "
-                    "that contain a detailed summary that is approximately two-thirds the length of the original text. "
-                    "The tone should be interesting, intelligent, and reflect a writing style of an Enterprise Architect."
+                "Summarize the key takeaways from the provided text into a 250-word section. "
+                "Then, condense the main points from the entire text into a recap that is "
+                "approximately 75% of the original word count. Please write the summary and "
+                "recap in a book-like format, using clear and concise language to reflect "
+                "on the learnings from the text. Ensure the text is formatted for optimal "
+                "readability, using headings, paragraphs, and proper spacing to make it "
+                "easy to follow and understand"
                 ),
             },
             {"role": "user", "content": text},
