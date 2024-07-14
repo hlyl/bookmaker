@@ -18,6 +18,9 @@ sample_html_content = """
 </html>
 """
 
+@pytest.fixture(autouse=True)
+def mock_env_openai_api_key(mocker):
+    mocker.patch.dict(os.environ, {"OPENAI_API_KEY": "mocked_api_key"})
 
 @pytest.fixture
 def mock_epub_book(mocker):
