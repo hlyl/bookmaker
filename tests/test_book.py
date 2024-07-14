@@ -1,6 +1,11 @@
 import pytest
+import os
 from ebooklib import epub, ITEM_DOCUMENT
 from bs4 import BeautifulSoup
+
+# Set the environment variable before importing the main module
+os.environ["OPENAI_API_KEY"] = "mocked_api_key"
+
 from src.main import (
     read_epub_book,
     extract_chapters,
@@ -17,10 +22,6 @@ sample_html_content = """
     </body>
 </html>
 """
-
-@pytest.fixture(autouse=True)
-def mock_env_openai_api_key(mocker):
-    mocker.patch.dict(os.environ, {"OPENAI_API_KEY": "mocked_api_key"})
 
 @pytest.fixture
 def mock_epub_book(mocker):
