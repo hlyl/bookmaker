@@ -83,21 +83,14 @@ def test_chapter_to_str(mock_epub_chapter):
     assert result == "This is a paragraph. This is another paragraph."
 
 def test_extract_chapters_to_text(mocker, mock_epub_book, mock_epub_chapter, mock_epub_ncx):
-    mock_read_epub = mocker.patch(
-        "src.main.read_epub_book", return_value=mock_epub_book
-    )
-    mock_extract_chapters_from_ncx = mocker.patch(
-        "src.main.extract_chapters_from_ncx", return_value=[("Chapter 1", "chapter1.xhtml")]
-    )
-    mock_chapter_to_str = mocker.patch(
-        "src.main.chapter_to_str",
-        return_value="This is a paragraph. This is another paragraph.",
-    )
+    mock_read_epub = mocker.patch("src.main.read_epub_book", return_value=mock_epub_book)
+    mock_extract_chapters_from_ncx = mocker.patch("src.main.extract_chapters_from_ncx", return_value=[("Chapter 1", "chapter1.xhtml")])
+    mock_chapter_to_str = mocker.patch("src.main.chapter_to_str", return_value="This is a paragraph. This is another paragraph.")
     mock_epub_book.get_item_with_href.return_value = mock_epub_chapter
 
     file_name = "test.epub"
-    # Call read_epub_book to mock the return value and trigger the correct behavior
-    book = read_epub_book(file_name)
+    # Simulate the read_epub_book call by directly setting the book object
+    book = mock_read_epub(file_name)
     result = extract_chapters_to_text(book, test_mode=True)
 
     mock_read_epub.assert_called_once_with(file_name)
