@@ -14,6 +14,9 @@ from typing import Dict, List, Tuple
 from openai import OpenAI
 from dotenv import load_dotenv
 from docx import Document
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 import argparse
 
 # Load environment variables from .env file
@@ -96,6 +99,43 @@ def count_words(text: str) -> int:
     words = text.split()
     return len(words)
 
+def format_document_to_word(content, output_file):
+    document = Document()
+
+    def add_heading(text, level):
+        document.add_heading(text, level=level)
+
+    def add_paragraph(text, bold=False, italic=False):
+        paragraph = document.add_paragraph()
+        run = paragraph.add_run(text)
+        run.bold = bold
+        run.italic = italic
+
+    def add_list_item(text):
+        paragraph = document.add_paragraph(text, style='List Bullet')
+
+    # Process content
+    lines = content.split('\n')
+    for line in lines:
+        if line.startswith("### "):
+            add_heading(line[4:], level=2)
+        elif line.startswith("#### "):
+            add_heading(line[5:], level=3)
+        elif line.startswith("- **") and line.endswith("**"):
+            add_paragraph(line[4:-3], bold=True)
+        elif line.startswith("- "):
+            add_list_item(line[2:])
+        elif line.startswith("**") and line.endswith("**"):
+            add_paragraph(line[2:-2], bold=True)
+        elif line.startswith("*") and line.endswith("*"):
+            add_paragraph(line[1:-1], italic=True)
+        elif line.strip() == "":
+            document.add_paragraph()
+        else:
+            add_paragraph(line)
+
+    document.save(output_file)
+
 def main():
     parser = argparse.ArgumentParser(description="Process an EPUB file and generate a summary DOCX file.")
     parser.add_argument('file_name', type=str, help='The path to the EPUB file to be processed')
@@ -144,10 +184,21 @@ def main():
         # Add a section break (next page)
         document.add_page_break()
 
+    # Collect the entire document text to reformat it
+    full_document_text = []
+    for paragraph in document.paragraphs:
+        full_document_text.append(paragraph.text)
+
+    # Join the paragraphs into a single string with newline separation
+    content = '\n'.join(full_document_text)
+
     # Determine the output file name based on the input file name
     base_name = os.path.splitext(os.path.basename(file_name))[0]
     output_file = f"{base_name}_Summary.docx"
-    document.save(output_file)
+
+    # Format the entire document content and save
+    format_document_to_word(content, output_file)
+
     print(f"Summarized chapters saved to {output_file}")
 
 if __name__ == "__main__":
